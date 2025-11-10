@@ -39,14 +39,6 @@
 // bayer matrix dithering implementation
 pub fn bayer(buffer: &mut [u8], height: u32, width: u32, matrix_dimension: u32)  {
 
-    // let bm: &[[u8; 8]; 8]; // temporary example type
-    // if matrix_dimension == 2 {
-    //     bm = &B2;
-    // } else if matrix_dimension == 4 {
-    //     bm = &B4;
-    // } else {
-    //     bm = &B8;
-    // }
 
     for y in 0..height {
         for x in 0..width {
@@ -54,11 +46,13 @@ pub fn bayer(buffer: &mut [u8], height: u32, width: u32, matrix_dimension: u32) 
 
             let m_y = (y % matrix_dimension ) as usize;
             let m_x  = (x % matrix_dimension) as usize;
-
+            
+            // predefining the matrix choice here, but later we want to be able to have the user select between 2,4,8, or 16 for matrix
             let bayer_rank = B16[m_y][m_x] as f64;
 
             // divisor is the scalar used for determining how small each step it
             // 0.5 is a rounding amount used in ordered dithering, you can modify it but results might get weird!
+            
             let threshold: f64  = (bayer_rank + 0.5) * (255.0 / ((matrix_dimension as f64) * (matrix_dimension as f64)));
 
             // simple logic check, comparing current pixel in buffer to the calculated threshold value
