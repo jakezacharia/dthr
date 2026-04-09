@@ -1,1 +1,5 @@
 /target
+/crates/**/target
+/.opencode
+.DS_Store
+*.png
