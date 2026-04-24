@@ -1,4 +1,3 @@
-use core::error;
 // need to reference these as args when calling for bayer dithering, look in main.rs
 const B2: [[u8; 2]; 2] = [[0, 2], [3, 1]];
 
@@ -69,7 +68,7 @@ const B16: [[u8; 16]; 16] = [
 
 
 // bayer matrix dithering implementation
-pub fn dither_bayer(buffer: &mut Vec<u8>, height: usize, width: usize, matrix_dimension: usize) -> Result<(), Box<dyn std::error::Error>> {
+pub fn dither_bayer(buffer: &mut Vec<u8>, height: u32, width: u32, matrix_dimension: u32) -> Result<(), Box<dyn std::error::Error>> {
 
     if matrix_dimension != 2 && matrix_dimension != 4 && matrix_dimension != 8 && matrix_dimension != 16 {
         return Err("Invalid Matrix Dimensions for Bayer Dithering - Must be 2, 4, 8 or 16!".into());
@@ -78,10 +77,10 @@ pub fn dither_bayer(buffer: &mut Vec<u8>, height: usize, width: usize, matrix_di
 
     for y in 0..height {
         for x in 0..width {
-            let i = (y as usize) * (width as usize) + (x as usize);
+            let i: usize = (y * width + x) as usize;
 
-            let m_y = (y % matrix_dimension) as usize;
-            let m_x = (x % matrix_dimension) as usize;
+            let m_y: usize  = (y % matrix_dimension) as usize;
+            let m_x: usize= (x % matrix_dimension) as usize;
 
             let bayer_rank = match matrix_dimension {
                 2 => B2[m_y][m_x] as f64,

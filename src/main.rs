@@ -14,8 +14,8 @@ fn load_image_to_buffer<P: AsRef<Path>>(path: P) -> Result<GrayImageBuffer, Box<
     let gray: ImageBuffer<Luma<u8>, Vec<u8>> = img.to_luma8();
     gray.save("grayscale.png")?;
 
-    let height: usize = gray.height() as usize;
-    let width: usize = gray.width() as usize;
+    let height: u32 = gray.height();
+    let width: u32 = gray.width();
     let buffer: Vec<u8> = gray.into_raw();
 
     Ok(GrayImageBuffer { data: buffer, width, height })
@@ -37,7 +37,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>>{
 
     // can check buffer values (each pixel) BEFORE calling dithering here...
     // TODO - this is where user selection implementation will occur, for now we are just calling a fixed function
-    dither_bayer(&mut gray_image_buffer.data, gray_image_buffer.height, gray_image_buffer.width, 8)?;
+    dither_bayer(&mut gray_image_buffer.data, gray_image_buffer.height, gray_image_buffer.width, 2)?;
 
     let img = GrayImage::from_raw(
         gray_image_buffer.width as u32,
@@ -56,10 +56,3 @@ fn main() -> Result<(), Box<dyn std::error::Error>>{
     Ok(())
 }
     
-
-
-// match 
-//     bayer 2 => dither_bayer(buffer, height, width, 2)
-//     bayer 4 => dither_bayer(buffer, height, width, 4)
-//     bayer 8 => dither_bayer(buffer, height, width, 8)
-
