@@ -1,4 +1,4 @@
-
+use core::error;
 // need to reference these as args when calling for bayer dithering, look in main.rs
 const B2: [[u8; 2]; 2] = [[0, 2], [3, 1]];
 
@@ -66,15 +66,15 @@ const B16: [[u8; 16]; 16] = [
     ],
 ];
 
+
+
 // bayer matrix dithering implementation
-pub fn dither_bayer(buffer: &mut [u8], height: u32, width: u32, matrix_dimension: u32) {
-    if matrix_dimension != 2
-        && matrix_dimension != 4
-        && matrix_dimension != 8
-        && matrix_dimension != 16
-    {
-        return;
+pub fn dither_bayer(buffer: &mut Vec<u8>, height: usize, width: usize, matrix_dimension: usize) -> Result<(), Box<dyn std::error::Error>> {
+
+    if matrix_dimension != 2 && matrix_dimension != 4 && matrix_dimension != 8 && matrix_dimension != 16 {
+        return Err("Invalid Matrix Dimensions for Bayer Dithering - Must be 2, 4, 8 or 16!".into());
     }
+
 
     for y in 0..height {
         for x in 0..width {
@@ -93,7 +93,6 @@ pub fn dither_bayer(buffer: &mut [u8], height: u32, width: u32, matrix_dimension
 
             // divisor is the scalar used for determining how small each step it
             // 0.5 is a rounding amount used in ordered dithering, you can modify it but results might get weird!
-
             let threshold: f64 = (bayer_rank + 0.5)
                 * (255.0 / ((matrix_dimension as f64) * (matrix_dimension as f64)));
 
@@ -105,5 +104,7 @@ pub fn dither_bayer(buffer: &mut [u8], height: u32, width: u32, matrix_dimension
             }
         }
     }
+    // not expecting a new result, see function signature - we are modifying IN PLACE 
+    Ok(())
 }
 

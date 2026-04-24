@@ -1,13 +1,15 @@
 use std::{env};
 use std::path::Path;
+
+use dthr::GrayImageBuffer;
 use dthr::bayer::dither_bayer;
-use image::imageops::dither;
-use image::{DynamicImage, GrayImage, ImageBuffer, ImageFormat, ImageReader, Luma, buffer};
+
+use image::{DynamicImage, GrayImage, ImageBuffer, ImageFormat, ImageReader, Luma, buffer, load};
 
 
-fn load_image_to_buffer<P: AsRef<Path>>(path: P) -> Result<(Vec<u8>, usize, usize), Box<dyn std::error::Error>> {
+fn load_image_to_buffer<P: AsRef<Path>>(path: P) -> Result<GrayImageBuffer, Box<dyn std::error::Error>> {
     
-    let img = ImageReader::open(path)?.decode()?;
+    let img: DynamicImage = ImageReader::open(path)?.decode()?;
     
     let gray: ImageBuffer<Luma<u8>, Vec<u8>> = img.to_luma8();
     gray.save("grayscale.png")?;
@@ -16,9 +18,8 @@ fn load_image_to_buffer<P: AsRef<Path>>(path: P) -> Result<(Vec<u8>, usize, usiz
     let width: usize = gray.width() as usize;
     let buffer: Vec<u8> = gray.into_raw();
 
-    Ok((buffer, width, height))
+    Ok(GrayImageBuffer { data: buffer, width, height })
 }
-
 
 fn main() -> Result<(), Box<dyn std::error::Error>>{
 
@@ -26,16 +27,39 @@ fn main() -> Result<(), Box<dyn std::error::Error>>{
     let args: Vec<String> = env::args().collect();
 
     if args.len() < 2 {
-        eprintln!("usage: {} <image_path>", args[0]);
+        eprintln!("Please provide path - usage: {} <image_path>", args[0]);
         std::process::exit(1);
     }
+
     let image_path: &String = &args[1];
-    let (buffer, width, height) = load_image_to_buffer(image_path)?;
 
-    println!("{buffer:?}");
+    let mut gray_image_buffer: GrayImageBuffer = load_image_to_buffer(image_path)?;
 
-    println!("loaded Image: {}x{}", width, height);
+    // can check buffer values (each pixel) BEFORE calling dithering here...
+    // TODO - this is where user selection implementation will occur, for now we are just calling a fixed function
+    dither_bayer(&mut gray_image_buffer.data, gray_image_buffer.height, gray_image_buffer.width, 8)?;
+
+    let img = GrayImage::from_raw(
+        gray_image_buffer.width as u32,
+        gray_image_buffer.height as u32,
+        gray_image_buffer.data,
+    ).ok_or("Failed to make the image!")?;
+
+    img.save("output.png")?;
+
+
+    // checking AFTER - use this for debugging! 
+    // println!("{gray_image_buffer:?}");
+
+    // call bayer dithering
 
     Ok(())
 }
     
+
+
+// match 
+//     bayer 2 => dither_bayer(buffer, height, width, 2)
+//     bayer 4 => dither_bayer(buffer, height, width, 4)
+//     bayer 8 => dither_bayer(buffer, height, width, 8)
+
